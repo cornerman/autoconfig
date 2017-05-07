@@ -15,16 +15,26 @@ class ConfigTranslator[C <: Context](val c: C) {
 
   case class ValueInfo(name: TermName, tpe: Type)
 
-  case class Options(section: Option[String])
+  case class Options(section: Option[String], flatTypes: Set[Type])
 
-  private val configVar = TermName(c.fresh("config"))
+  private val configVar = TermName(c.freshName("config"))
 
   private val options: Options = c.prefix.tree match {
-    case Apply(_, args) => args match {
-      case Ident(TermName(section)) :: Nil => Options(section = Option(section))
-      case Nil => Options(section = None)
-      case _ => c.abort(c.enclosingPosition, "invalid argument, expected: section")
+    case Apply(_, args) =>
+      val section: Seq[String] = args.collect {
+        case q"section = ${section: TermName}" => section.toString
       }
+      val flatTypes: Seq[Set[Type]] = args.collect {
+        case q"flatTypes = Set(..$names)" =>
+          val typeNames = names.map(name => tq"${TypeName(name.toString)}")
+          typeNames.map(treeToType).toSet
+      }
+
+      val validArgs = section.size + flatTypes.size
+      if (validArgs > 2 || validArgs < args.size)
+        c.abort(c.enclosingPosition, "invalid argument, expected: section = <name>, flatTypes = <set>")
+
+      Options(section.lastOption, flatTypes.lastOption.toSet.flatten)
     case _ => c.abort(c.enclosingPosition, "unexpected invocation")
   }
 
@@ -65,9 +75,22 @@ class ConfigTranslator[C <: Context](val c: C) {
         val tpeArg = value.tpe.typeArgs.head
         generateImplementation(section, ValueInfo(value.name, tpeArg), true).right.map(maybeImpl _)
       case tpe if tpe.typeSymbol.isClass =>
-        sequence(constructorValues(value.tpe).map(list => sequence(list.map { value =>
+        val ctorValues = constructorValues(value.tpe)
+        val isFlat = options.flatTypes.find(_ =:= value.tpe).isDefined || (tpe <:< typeOf[AnyVal])
+        val impl = isFlat match {
+          case true if ctorValues.size == 1 && ctorValues.head.size == 1 =>
+            val innerValue = ctorValues.head.head.copy(name = value.name)
+            generateImplementation(section, innerValue, optional).right.map { impl => Seq(Seq(impl)) }
+          case true =>
+            Left("flat types need to have exactly one constructor")
+          case false =>
+            val valueImpls = ctorValues.map(_.map { value =>
               generateImplementation(Option(key), value, optional)
-        }))).right.map { args =>
+            })
+            sequence(valueImpls.map(sequence _))
+        }
+
+        impl.right.map { args =>
           if (optional) {
             val argNames = args.zipWithIndex.map { case (args, i) =>
               args.zipWithIndex.map { case (arg, j) =>
@@ -88,7 +111,6 @@ class ConfigTranslator[C <: Context](val c: C) {
 
   def generateMember(section: Option[String], value: ValueInfo): Either[String, Tree] =
     generateImplementation(section, value, false).right.map { getter =>
-      println(getter)
       q"val ${value.name}: ${value.tpe} = $getter"
     }
 
