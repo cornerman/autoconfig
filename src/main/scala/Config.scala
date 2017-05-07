@@ -24,7 +24,7 @@ class ConfigTranslator[C <: Context](val c: C) {
       case Ident(TermName(section)) :: Nil => Options(section = Option(section))
       case Nil => Options(section = None)
       case _ => c.abort(c.enclosingPosition, "invalid argument, expected: section")
-    }
+      }
     case _ => c.abort(c.enclosingPosition, "unexpected invocation")
   }
 
@@ -66,7 +66,7 @@ class ConfigTranslator[C <: Context](val c: C) {
         generateImplementation(section, ValueInfo(value.name, tpeArg), true).right.map(maybeImpl _)
       case tpe if tpe.typeSymbol.isClass =>
         sequence(constructorValues(value.tpe).map(list => sequence(list.map { value =>
-          generateImplementation(Option(key), value, optional)
+              generateImplementation(Option(key), value, optional)
         }))).right.map { args =>
           if (optional) {
             val argNames = args.zipWithIndex.map { case (args, i) =>
@@ -98,18 +98,12 @@ class ConfigTranslator[C <: Context](val c: C) {
     }
 
     sequence(values.map(generateMember(options.section, _))).right.map { members =>
-      val init = options.section match {
-        case Some(section) =>
-          q"val $configVar = com.typesafe.config.ConfigFactory.load.getConfig($section)"
-        case None =>
-          q"val $configVar = com.typesafe.config.ConfigFactory.load"
-      }
-
+      val init = q"val $configVar = com.typesafe.config.ConfigFactory.load"
       val imports =
         q"import scala.collection.JavaConverters._" ::
         Nil
 
-      init :: (imports ++ members)
+        init :: (imports ++ members)
     }
   }
 
