@@ -1,4 +1,6 @@
-# config-objects
+# autoconfig
+
+generate config objects for typesafe.config in scala
 
 # usage
 
