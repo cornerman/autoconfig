@@ -24,7 +24,7 @@ case class SmtpConfig(endpoint: String, username: String, password: String)
 case class AuthConfig(tokenLifetime: Long, secret: String)
 case class EmailConfig(fromAddress: String, smtp: SmtpConfig)
 
-@config(section = wust) object Config {
+@config(section = "wust") object Config {
   val usergroup: Long
   val auth: AuthConfig
   val email: Option[EmailConfig]
