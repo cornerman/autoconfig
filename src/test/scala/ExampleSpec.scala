@@ -29,9 +29,14 @@ class ExampleSpec extends Specification {
 
   @config object MinConfig {
     val v: Option[Long]
+    val w: Option[Long]
   }
 
-  "load config" >> {
+  "load config value" >> {
     MinConfig.v mustEqual None
+  }
+
+  "config toString" >> {
+    MinConfig.toString mustEqual "MinConfig(None,None)"
   }
 }

@@ -32,7 +32,8 @@ class ConfigSpec extends CompileSpec with ContextMock {
       @autoconfig.config(section = urmel) object Config {
         val id: Long
       }""" must compile.to(containTree(
-        q"""Config.this.config$$macro$$1.getLong("urmel.id")"""
+        q"""Config.this.config$$macro$$1.getLong("urmel.id")""",
+        q"""override def toString = "Config".+((Config.this.id))"""
       ))
   }
 
@@ -59,7 +60,8 @@ class ConfigSpec extends CompileSpec with ContextMock {
         val obj: (Int, String)
       }""" must compile.to(containTree(
         q"""Config.this.config$$macro$$1.getInt("obj._1")""",
-        q"""Config.this.config$$macro$$1.getString("obj._2")"""
+        q"""Config.this.config$$macro$$1.getString("obj._2")""",
+        q"""override def toString = "Config".+((Config.this.obj))"""
       ))
   }
 }
