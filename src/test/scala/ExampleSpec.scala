@@ -9,7 +9,7 @@ case class AuthConfig(enableImplicit: Boolean, tokenLifetime: Long, secret: Stri
 case class EmailConfig(fromAddress: String, smtp: SmtpConfig)
 
 class ExampleSpec extends Specification {
-  @config(section = wust) object Config {
+  @config(section = "wust") object Config {
     val id: Long
     val str: String
     val boo: Boolean

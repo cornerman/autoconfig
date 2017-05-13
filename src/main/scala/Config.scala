@@ -15,14 +15,14 @@ class ConfigTranslator[C <: Context](val c: C) {
 
   case class ValueInfo(name: TermName, tpe: Type)
 
-  case class Options(section: Option[String], flatTypes: Set[Type])
+  case class Options(section: Option[Tree], flatTypes: Set[Type])
 
   private val configVar = TermName(c.freshName("config"))
 
   private val options: Options = c.prefix.tree match {
     case Apply(_, args) =>
-      val section: Seq[String] = args.collect {
-        case q"section = ${section: TermName}" => section.toString
+      val section: Seq[Tree] = args.collect {
+        case q"section = $section" => section
       }
       val flatTypes: Seq[Set[Type]] = args.collect {
         case q"flatTypes = Set(..$names)" =>
@@ -123,9 +123,16 @@ class ConfigTranslator[C <: Context](val c: C) {
       case q"val $name: $tpt" => ValueInfo(name, treeToType(tpt))
     }
 
-    sequence(values.map(generateMember(options.section, _))).right.map { members =>
+    sequence(values.map(generateMember(None, _))).right.map { members =>
+      val rootConfigVar = TermName(c.freshName("config"))
       val args = values.map(_.name)
-      q"val $configVar = com.typesafe.config.ConfigFactory.load" ::
+
+      q"val $rootConfigVar = com.typesafe.config.ConfigFactory.load" ::
+      (options.section match {
+        case Some(section) => q"val $configVar = $rootConfigVar.getConfig($section)"
+        case None => q"val $configVar = $rootConfigVar"
+      }) ::
+      // q"val $configVar = com.typesafe.config.ConfigFactory.load" ::
       q"""override def toString = ${name.toString}.+((..$args))""" ::
       q"import scala.collection.JavaConverters._" ::
       members.toList
