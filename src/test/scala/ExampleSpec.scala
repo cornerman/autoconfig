@@ -47,6 +47,6 @@ class ExampleSpec extends Specification {
   }
 
   "config toString" >> {
-    MinConfig.toString mustEqual "MinConfig(None,None)"
+    MinConfig.toString mustEqual "MinConfig(v = None,w = None)"
   }
 }

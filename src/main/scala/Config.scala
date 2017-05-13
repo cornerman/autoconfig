@@ -130,15 +130,19 @@ class ConfigTranslator[C <: Context](val c: C) {
 
     sequence(values.map(generateMember(None, _))).right.map { members =>
       val rootConfigVar = TermName(c.freshName("config"))
-      val args = values.map(_.name)
+      val args = values.map { value =>
+        q"""${value.name.toString} + " = " + ${value.name}"""
+      }
+      val sectionName = options.section.map { section =>
+        q""""(section = " + $section + ")""""
+      }.getOrElse(q"""""""")
 
       q"val $rootConfigVar = com.typesafe.config.ConfigFactory.load" ::
       (options.section match {
         case Some(section) => q"val $configVar = $rootConfigVar.getConfig($section)"
         case None => q"val $configVar = $rootConfigVar"
       }) ::
-      // q"val $configVar = com.typesafe.config.ConfigFactory.load" ::
-      q"""override def toString = ${name.toString}.+((..$args))""" ::
+      q"""override def toString = ${name.toString}.+($sectionName).+((..$args))""" ::
       q"import scala.collection.JavaConverters._" ::
       (members.toList ++ implementations.toList)
     }
