@@ -124,9 +124,9 @@ class ConfigTranslator[C <: Context](val c: C) {
     }
 
   def generateMembers(name: TermName, body: List[Tree]): Either[String, List[Tree]] = {
-    val values = body collect {
-      case q"val $name: $tpt" => ValueInfo(name, treeToType(tpt))
-    }
+    val decls = body collect { case decl@q"val $_: $_" => decl }
+    val implementations = body.filterNot(decls.contains _)
+    val values = decls.map { case q"val $name: $tpt" => ValueInfo(name, treeToType(tpt)) }
 
     sequence(values.map(generateMember(None, _))).right.map { members =>
       val rootConfigVar = TermName(c.freshName("config"))
@@ -140,12 +140,13 @@ class ConfigTranslator[C <: Context](val c: C) {
       // q"val $configVar = com.typesafe.config.ConfigFactory.load" ::
       q"""override def toString = ${name.toString}.+((..$args))""" ::
       q"import scala.collection.JavaConverters._" ::
-      members.toList
+      (members.toList ++ implementations.toList)
     }
   }
 
   def translate(obj: ModuleDef): Either[String, Tree] = {
-    val members = generateMembers(obj.name, obj.impl.body)
+    val body = obj.impl.body.tail // drop object constructor <init> (?)
+    val members = generateMembers(obj.name, body)
     members.right.map { members =>
       q"object ${obj.name} { ..$members }"
     }

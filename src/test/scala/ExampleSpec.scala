@@ -32,10 +32,18 @@ class ExampleSpec extends Specification {
   @config object MinConfig {
     val v: Option[Long]
     val w: Option[Long]
+
+    val bar = 3
+    def foo(x: Long) = (v orElse w).getOrElse(x)
   }
 
   "load config value" >> {
     MinConfig.v mustEqual None
+  }
+
+  "existing methods" >> {
+    MinConfig.bar mustEqual 3
+    MinConfig.foo(-1) mustEqual -1
   }
 
   "config toString" >> {
