@@ -39,8 +39,10 @@ class ConfigTranslator[C <: Context](val c: C) {
   }
 
   def constructorValues(tpe: Type): List[List[ValueInfo]] = {
-    val symbol = tpe.declaration(nme.CONSTRUCTOR)
-    symbol.typeSignature.paramLists.map(_.map(param => ValueInfo(param.name.toString, param.typeSignature))).toList
+    val symbol = tpe.decl(termNames.CONSTRUCTOR)
+    symbol.typeSignatureIn(tpe).paramLists.map(_.map { param =>
+      ValueInfo(TermName(param.name.toString), param.typeSignature)
+    }).toList
   }
 
   //TODO: check for null|NoType
