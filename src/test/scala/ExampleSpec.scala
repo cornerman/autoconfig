@@ -1,6 +1,7 @@
 package autoconfig
 
 import org.specs2.mutable.Specification
+import com.typesafe.config.Config
 
 class Id(val id: Long) extends AnyVal
 case class SmtpConfig(endpoint: String)//, username: String, password: String)
@@ -10,6 +11,7 @@ case class EmailConfig(fromAddress: String, smtp: SmtpConfig)
 
 class ExampleSpec extends Specification {
   @config(section = "wust") object Config {
+    val conf: Config
     val id: Long
     val str: String
     val boo: Boolean

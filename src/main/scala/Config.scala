@@ -4,6 +4,8 @@ import scala.reflect._
 import scala.reflect.macros.whitebox.Context
 import scala.language.experimental.macros
 import scala.annotation.{StaticAnnotation, compileTimeOnly}
+import java.time.Duration
+import com.typesafe.config.{Config, ConfigMemorySize}
 
 object EitherHelper {
   def sequence[A, B](s: Seq[Either[A, B]]): Either[A, Seq[B]] = s collectFirst { case Left(l) => Left(l) } getOrElse Right(s collect { case Right(x) => x })
@@ -67,14 +69,17 @@ class ConfigTranslator[C <: Context](val c: C) {
       case tpe if tpe =:= typeOf[Double] => Right(maybeImpl(q"$configVar.getDouble($key)"))
       case tpe if tpe =:= typeOf[Boolean] => Right(maybeImpl(q"$configVar.getBoolean($key)"))
       case tpe if tpe =:= typeOf[String] => Right(maybeImpl(q"$configVar.getString($key)"))
+      case tpe if tpe =:= typeOf[Config] => Right(maybeImpl(q"$configVar.getConfig($key)"))
+      case tpe if tpe =:= typeOf[ConfigMemorySize] => Right(maybeImpl(q"$configVar.getMemorySize($key)"))
+      case tpe if tpe =:= typeOf[Duration] => Right(maybeImpl(q"$configVar.getDuration($key)"))
       case tpe if tpe =:= typeOf[List[Int]] => Right(maybeImpl(q"$configVar.getIntList($key).asScala.map(_.intValue).toList"))
       case tpe if tpe =:= typeOf[List[Long]] => Right(maybeImpl(q"$configVar.getLongList($key).asScala.map(_.longValue).toList"))
       case tpe if tpe =:= typeOf[List[Double]] => Right(maybeImpl(q"$configVar.getDoubleList($key).asScala.map(_.doubleValue).toList"))
       case tpe if tpe =:= typeOf[List[Boolean]] => Right(maybeImpl(q"$configVar.getBooleanList($key).asScala.map(_.booleanValue).toList"))
       case tpe if tpe =:= typeOf[List[String]] => Right(maybeImpl(q"$configVar.getStringList($key).asScala.toList"))
-      //TODO case duration? eg 10ms, 4h
-      //TODO case bytes?
-      //TODO case memorylimit?
+      case tpe if tpe =:= typeOf[List[Config]] => Right(maybeImpl(q"$configVar.getConfigList($key).asScala.toList"))
+      case tpe if tpe =:= typeOf[List[ConfigMemorySize]] => Right(maybeImpl(q"$configVar.getMemorySizeList($key).asScala.toList"))
+      case tpe if tpe =:= typeOf[List[Duration]] => Right(maybeImpl(q"$configVar.getDurationList($key).asScala.toList"))
       case tpe if tpe <:< typeOf[Option[Any]] =>
         val tpeArg = value.tpe.typeArgs.head
         generateImplementation(section, ValueInfo(value.name, tpeArg), true).right.map(maybeImpl _)
