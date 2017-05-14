@@ -2,7 +2,7 @@ name := "autoconfig"
 version := "0.1.0-SNAPSHOT"
 
 scalaVersion := "2.11.11"
-crossScalaVersions in ThisBuild := Seq("2.11.11", "2.12.2")
+crossScalaVersions := Seq("2.11.11", "2.12.2")
 
 addCompilerPlugin("org.scalamacros" % "paradise" % "2.1.0" cross CrossVersion.full)
 
