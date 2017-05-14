@@ -12,8 +12,8 @@ libraryDependencies ++=
   "org.scala-lang" % "scala-reflect" % scalaVersion.value ::
   "com.typesafe" % "config" % "1.3.1" ::
   "com.github.cornerman" %% "macroni" % "0.1.0-SNAPSHOT" % "test" ::
-  "org.specs2" %% "specs2-core" % "3.8.4" % "test" ::
-  "org.specs2" %% "specs2-mock" % "3.8.4" % "test" ::
+  "org.specs2" %% "specs2-core" % "3.8.9" % "test" ::
+  "org.specs2" %% "specs2-mock" % "3.8.9" % "test" ::
   Nil
 
 scalacOptions ++=
