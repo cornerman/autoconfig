@@ -29,11 +29,13 @@ class ConfigSpec extends CompileSpec with ContextMock {
 
   "section" >> {
     q"""
-      @autoconfig.config(section = urmel) object Config {
+      @autoconfig.config(section = "urmel") object Config {
         val id: Long
       }""" must compile.to(containTree(
-        q"""Config.this.config$$macro$$1.getLong("urmel.id")""",
-        q"""override def toString = "Config".+((Config.this.id))"""
+        q"""com.typesafe.config.ConfigFactory.load()""",
+        q"""Config.this.config$$macro$$2.getConfig("urmel")""",
+        q"""Config.this.config$$macro$$1.getLong("id")""",
+        q"""override def toString = "Config(section = urmel)".+("id = ".+(Config.this.id))"""
       ))
   }
 
@@ -46,6 +48,7 @@ class ConfigSpec extends CompileSpec with ContextMock {
         val i: Int
         val d: Double
       }""" must compile.to(containTree(
+        q"""com.typesafe.config.ConfigFactory.load()""",
         q"""Config.this.config$$macro$$1.getLong("id")""",
         q"""Config.this.config$$macro$$1.getString("str")""",
         q"""Config.this.config$$macro$$1.getBoolean("boo")""",
@@ -59,9 +62,10 @@ class ConfigSpec extends CompileSpec with ContextMock {
       @autoconfig.config object Config {
         val obj: (Int, String)
       }""" must compile.to(containTree(
+        q"""com.typesafe.config.ConfigFactory.load()""",
         q"""Config.this.config$$macro$$1.getInt("obj._1")""",
         q"""Config.this.config$$macro$$1.getString("obj._2")""",
-        q"""override def toString = "Config".+((Config.this.obj))"""
+        q"""override def toString = "Config".+("obj = ".+(Config.this.obj))"""
       ))
   }
 }
