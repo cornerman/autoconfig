@@ -1,52 +1,51 @@
 package autoconfig
 
 import org.specs2.mutable.Specification
-import com.typesafe.config.Config
+import com.typesafe.config
+import java.time.Duration
 
-class Id(val id: Long) extends AnyVal
-case class SmtpConfig(endpoint: String)//, username: String, password: String)
-case class UsergroupConfig(publicId: Id)
-case class AuthConfig(enableImplicit: Boolean, tokenLifetime: Long, secret: String)
-case class EmailConfig(fromAddress: String, smtp: SmtpConfig)
+case class UserGroup(id: Long) extends AnyVal
+case class SmtpConfig(endpoint: String, username: String, password: String)
+case class AuthConfig(tokenLifetime: Duration, secret: String)
+class EmailConfig(fromAddress: String, smtp: SmtpConfig)
+
+@config(section = "wust") object Config {
+  val usergroup: UserGroup
+  val auth: AuthConfig
+  val email: Option[EmailConfig]
+
+  def hasMail = email.isDefined
+}
+
+@config object SomeConfig {
+  val conf: config.Config
+  val id: Long
+  val str: String
+  val boo: Boolean
+  val i: Int
+  val ido: Option[Long]
+  val stro: Option[String]
+  val booo: Option[Boolean]
+  val io: Option[Int]
+  val ids: List[Long]
+  val strs: List[String]
+  val boos: List[Boolean]
+  val is: List[Int]
+}
 
 class ExampleSpec extends Specification {
-  @config(section = "wust") object Config {
-    val conf: Config
-    val id: Long
-    val str: String
-    val boo: Boolean
-    val i: Int
-    val ido: Option[Long]
-    val stro: Option[String]
-    val booo: Option[Boolean]
-    val io: Option[Int]
-    val ids: List[Long]
-    val strs: List[String]
-    val boos: List[Boolean]
-    val is: List[Int]
-    val usergroup: UsergroupConfig
-    val auth: AuthConfig
-    val email: Option[EmailConfig]
-  }
-
-  @config object MinConfig {
-    val v: Option[Long]
-    val w: Option[Long]
-
-    val bar = 3
-    def foo(x: Long) = (v orElse w).getOrElse(x)
-  }
 
   "load config value" >> {
-    MinConfig.v mustEqual None
+    Config.usergroup mustEqual UserGroup(1)
+    Config.auth mustEqual AuthConfig(Duration.ofHours(24), "secret")
+    Config.email mustEqual None
   }
 
   "existing methods" >> {
-    MinConfig.bar mustEqual 3
-    MinConfig.foo(-1) mustEqual -1
+    Config.hasMail mustEqual false
   }
 
   "config toString" >> {
-    MinConfig.toString mustEqual "MinConfig(v = None,w = None)"
+    Config.toString mustEqual "Config(section = wust)(usergroup = UserGroup(1),auth = AuthConfig(PT24H,secret),email = None)"
   }
 }

@@ -19,15 +19,19 @@ Code:
 
 ```scala
 import autoconfig.config
+import java.time.Duration
 
+case class UserGroup(id: Long) extends AnyVal
 case class SmtpConfig(endpoint: String, username: String, password: String)
-case class AuthConfig(tokenLifetime: Long, secret: String)
-case class EmailConfig(fromAddress: String, smtp: SmtpConfig)
+case class AuthConfig(tokenLifetime: Duration, secret: String)
+class EmailConfig(fromAddress: String, smtp: SmtpConfig)
 
 @config(section = "wust") object Config {
-  val usergroup: Long
+  val usergroup: UserGroup
   val auth: AuthConfig
   val email: Option[EmailConfig]
+
+  def hasMail = email.isDefined
 }
 ```
 
@@ -37,7 +41,7 @@ application.conf:
 wust {
     usergroup = 1
     auth {
-        tokenLifetimeSeconds = 86400
+        tokenLifetime = 24h
         secret = ${SECRET}
     }
 

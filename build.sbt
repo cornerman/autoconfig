@@ -27,6 +27,10 @@ scalacOptions ++=
   "-Ywarn-unused" ::
   Nil
 
+fork in Test := true
+
+envVars in Test := Map("SECRET" -> "secret")
+
 organization in Global := "com.github.cornerman"
 
 pgpSecretRing in Global := file("secring.gpg")
